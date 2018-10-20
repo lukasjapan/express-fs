@@ -44,6 +44,7 @@ describe("Filesystem", function() {
           "base64"
         ).toString("ascii");
         fs.file("/image.png", this.imageContent);
+        this.statContent = JSON.stringify(fs.statSync("/file"));
       });
 
       it("returns the content of file", function(done) {
@@ -64,10 +65,8 @@ describe("Filesystem", function() {
         it("returns the stat of a file", function(done) {
           request(app)
             .get("/file?stat")
-            .expect(200, function() {
-              JSON.stringify(fs.statSync("/file"));
-              done();
-            });
+            .expect("Content-Type", /application\/json/)
+            .expect(200, this.statContent, done);
         });
       });
     });
