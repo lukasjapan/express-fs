@@ -87,7 +87,7 @@ describe("Filesystem", function() {
           .send(data)
           .expect(201, function() {
             assert.equal(__fs.readFileSync(file), data);
-            __fs.unlink(file);
+            __fs.unlinkSync(file);
             done();
           });
       });
@@ -108,7 +108,7 @@ describe("Filesystem", function() {
         .send("bar")
         .expect(200, function() {
           assert.equal("foobar", __fs.readFileSync(file).toString());
-          __fs.unlink(file);
+          __fs.unlinkSync(file);
           done();
         });
     });
