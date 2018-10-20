@@ -1,50 +1,58 @@
-var mocha = require("mocha"),
-  assert = require("assert");
+var mocha = require("mocha");
+var assert = require("assert");
 
-var request = require("supertest"),
-  __fs = require("fs");
-Fs = require("fake-fs");
+var request = require("supertest");
+var fs = require("fs");
+var mockFs = require("mock-fs");
 
-var express = require("express"),
-  app = express(),
-  exposefs = require("../index");
-app.use("/", exposefs({ backend: "filesystem", basepath: "/" }));
+var express = require("express");
+var app = express();
+var expressRestFs = require("../index");
 
-var fs = null;
+app.use("/", expressRestFs({ basepath: "" }));
+
 describe("Filesystem", function() {
   beforeEach(function() {
-    fs = new Fs();
-    fs.patch();
+    mockFs({});
   });
 
   afterEach(function() {
-    fs.unpatch();
+    mockFs.restore();
   });
 
   describe("GET", function() {
     context("/directory", function() {
       it("returns the content of directory", function(done) {
-        var content = ["foo", "bar"];
-        content.forEach(function(f) {
-          fs.dir("/" + f);
-        });
+        this.folders = ["bar", "foo"];
+        this.folders.forEach(fs.mkdirSync);
 
         request(app)
           .get("/")
-          .expect(200, JSON.stringify(content), done);
+          .expect("Content-Type", /application\/json/)
+          .expect(200, JSON.stringify(this.folders), done);
+      });
+    });
+
+    context("No file", function() {
+      it("returns a 404 error", function(done) {
+        request(app)
+          .get("/non-existing-file")
+          .expect("Content-Type", /text\/html/)
+          .expect(404, "Not found.", done);
       });
     });
 
     context("/file", function() {
       beforeEach(function() {
         this.content = "content of file";
-        fs.file("/file", this.content);
-        this.imageContent = Buffer.from(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-          "base64"
-        ).toString("ascii");
-        fs.file("/image.png", this.imageContent);
-        this.statContent = JSON.stringify(fs.statSync("/file"));
+        fs.writeFileSync("file", this.content);
+        this.statContent = JSON.stringify(fs.statSync("file"));
+
+        //   fs.file("/file", this.content);
+        //   this.imageContent = Buffer.from(
+        //     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        //     "base64"
+        //   ).toString("ascii");
       });
 
       it("returns the content of file", function(done) {
@@ -52,13 +60,6 @@ describe("Filesystem", function() {
           .get("/file")
           .expect("Content-Type", /application\/octet-stream/)
           .expect(200, this.content, done);
-      });
-
-      it("returns the content of image file", function(done) {
-        request(app)
-          .get("/image.png")
-          .expect("Content-Type", /image\/png/)
-          .expect(200, this.imageContent, done);
       });
 
       context("?stat", function() {
@@ -70,71 +71,84 @@ describe("Filesystem", function() {
         });
       });
     });
-  });
 
-  describe("POST", function() {
-    context("/directory/", function() {
-      it("creates a directory", function(done) {
+    context("/image.png", function() {
+      it("returns the content of image file", function(done) {
+        var content = Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "base64"
+        ).toString("ascii");
+        fs.writeFileSync("image.png", content);
+
         request(app)
-          .post("/directory/")
-          .expect(201)
-          .end(function() {
-            assert(fs.statSync("/directory").isDirectory());
+          .get("/image.png")
+          .expect("Content-Type", /image\/png/)
+          .expect(200, content, done);
+      });
+    });
+
+    describe("POST", function() {
+      context("/directory/", function() {
+        it("creates a directory", function(done) {
+          request(app)
+            .post("/directory/")
+            .expect(201)
+            .end(function(err) {
+              if (err) throw err;
+              assert(fs.statSync("directory").isDirectory());
+              done();
+            });
+        });
+      });
+
+      context("/file", function(done) {
+        it("creates a file", function(done) {
+          var content = "content of input file";
+
+          request(app)
+            .post("/file")
+            .send(content)
+            .expect(201)
+            .end(function(err) {
+              if (err) throw err;
+              assert.equal(fs.readFileSync("file"), content);
+              done();
+            });
+        });
+      });
+    });
+
+    describe("PUT", function() {
+      it("appends data to a file", function(done) {
+        var content = "content of file";
+        var append = " bar";
+        fs.writeFileSync("file", content);
+
+        request(app)
+          .put("/file")
+          .send(append)
+          .expect(200)
+          .end(function(err) {
+            if (err) throw err;
+            assert.equal(content + append, fs.readFileSync("file").toString());
             done();
           });
       });
     });
 
-    context("/file", function(done) {
-      beforeEach(function() {
-        fs.unpatch();
-      });
-
-      it("creates a file", function(done) {
-        var file = "/tmp/.exposefs_tmp_file";
-        var data = "deleteme";
-
+    describe("DELETE", function() {
+      it("removes file", function(done) {
+        fs.writeFileSync("file", "to be deleted");
+        assert.equal(fs.existsSync("file"), true);
         request(app)
-          .post(file)
-          .send(data)
-          .expect(201, function() {
-            assert.equal(__fs.readFileSync(file), data);
-            __fs.unlinkSync(file);
+          .delete("/file")
+          .expect(200)
+          .end(function(err) {
+            if (err) throw err;
+            assert.equal(fs.existsSync("file"), false);
             done();
           });
       });
-    });
-  });
-
-  describe("PUT", function() {
-    beforeEach(function() {
-      fs.unpatch();
-    });
-
-    it("appends data to a file", function(done) {
-      var file = "/tmp/.exposefs_tmp_file";
-      __fs.writeFileSync(file, "foo");
-
-      request(app)
-        .put(file)
-        .send("bar")
-        .expect(200, function() {
-          assert.equal("foobar", __fs.readFileSync(file).toString());
-          __fs.unlinkSync(file);
-          done();
-        });
-    });
-  });
-
-  describe("DELETE", function() {
-    it("removes file", function(done) {
-      fs.file("/file");
-      request(app)
-        .delete("/file")
-        .expect(200, function() {
-          assert.equal(fs.existsSync("/file"), false);
-          done();
-        });
     });
   });
 });
