@@ -12,9 +12,9 @@ As _exposefs_ has been built as an express middleware, you can use it to your ex
 var express = require("express");
 var app = express();
 
-var exposefs = require("exposefs");
+var expressRestFs = require("express-rest-fs");
 
-app.use("/fs", exposefs({ basepath: "/home/" }));
+app.use("/fs", expressRestFs({ basepath: "/home/" }));
 
 /* your routing definition */
 
