@@ -1,7 +1,7 @@
 {
-  "name": "exposefs",
-  "version": "0.0.2",
-  "description": "Exposes you filesystem as a REST API",
+  "name": "express-rest-fs",
+  "version": "0.0.3",
+  "description": "Exposes your filesystem as a REST API",
   "keywords": [
     "filesystem",
     "rest",
@@ -11,13 +11,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/gchaincl/exposefs"
+    "url": "https://github.com/lukasjapan/express-rest-fs"
   },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Gustaf Shin",
+  "author": "Lukas Prasuhn",
   "license": "MIT",
   "dependencies": {
     "express": "^4.3.2",
