@@ -39,12 +39,25 @@ describe("Filesystem", function() {
       beforeEach(function() {
         this.content = "content of file";
         fs.file("/file", this.content);
+        this.imageContent = Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "base64"
+        ).toString("ascii");
+        fs.file("/image.png", this.imageContent);
       });
 
       it("returns the content of file", function(done) {
         request(app)
           .get("/file")
+          .expect("Content-Type", /application\/octet-stream/)
           .expect(200, this.content, done);
+      });
+
+      it("returns the content of image file", function(done) {
+        request(app)
+          .get("/image.png")
+          .expect("Content-Type", /image\/png/)
+          .expect(200, this.imageContent, done);
       });
 
       context("?stat", function() {
