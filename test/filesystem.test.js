@@ -23,13 +23,29 @@ describe("Filesystem", function() {
   describe("GET", function() {
     context("/directory", function() {
       it("returns the content of directory", function(done) {
-        this.folders = ["bar", "foo"];
-        this.folders.forEach(fs.mkdirSync);
+        var folders = ["bar", "foo"];
+        folders.forEach(fs.mkdirSync);
+        var files = ["file"];
+        files.forEach(function(f) {
+          fs.writeFileSync(f, "content of file");
+        });
 
         request(app)
           .get("/")
           .expect("Content-Type", /application\/json/)
-          .expect(200, JSON.stringify(this.folders), done);
+          .expect(200)
+          .end(function(err, res) {
+            if (err) throw err;
+            assert.notStrictEqual(
+              Object.keys(res.body),
+              folders.concat(files).sort()
+            );
+            assert.ok(res.body.bar.isDirectory);
+            assert.ok(!res.body.bar.isFile);
+            assert.ok(res.body.file.isFile);
+            assert.ok(!res.body.file.isDirectory);
+            done();
+          });
       });
     });
 
@@ -46,13 +62,6 @@ describe("Filesystem", function() {
       beforeEach(function() {
         this.content = "content of file";
         fs.writeFileSync("file", this.content);
-        this.statContent = JSON.stringify(fs.statSync("file"));
-
-        //   fs.file("/file", this.content);
-        //   this.imageContent = Buffer.from(
-        //     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-        //     "base64"
-        //   ).toString("ascii");
       });
 
       it("returns the content of file", function(done) {
@@ -67,7 +76,13 @@ describe("Filesystem", function() {
           request(app)
             .get("/file?stat")
             .expect("Content-Type", /application\/json/)
-            .expect(200, this.statContent, done);
+            .expect(200)
+            .end(function(err, res) {
+              if (err) throw err;
+              assert.ok(res.body.isFile);
+              assert.ok(!res.body.isDirectory);
+              done();
+            });
         });
       });
     });

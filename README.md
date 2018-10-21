@@ -30,7 +30,6 @@ The code above will serve your `home` directory under `/fs` url.
 | List Directory             | `GET`    | readdir   |
 | Retrieve file              | `GET`    | read      |
 | Stat file                  | `GET`    | stat      | must use `?stat`               |
-| Follow a file              | `GET`    | follow    | must use `?follow`             |
 | Create File                | `POST`   | write     |
 | Create Directory           | `POST`   | mkdir     | file name must finish with `/` |
 | Append to File             | `PUT`    | write     |
@@ -40,4 +39,4 @@ The code above will serve your `home` directory under `/fs` url.
 ## TODO:
 
 - Testing
-- Add different backends (dropbox, s3, etc)
+- Rethink status codes/responses
