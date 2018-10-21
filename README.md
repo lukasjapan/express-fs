@@ -1,4 +1,4 @@
-## ExposeFS
+## ExpressRestFs
 
 Let's RESTify your filesystem
 
@@ -6,7 +6,7 @@ Let's RESTify your filesystem
 
 `./bin/expose [path] [port]` will serve path (~ by default) at port (8000 by default).
 
-As _exposefs_ has been built as an express middleware, you can use it to your existing express application.
+As _expressRestFs_ has been built as an express middleware, you can use it in your existing express application.
 
 ```javascript
 var express = require("express");
@@ -40,3 +40,6 @@ The code above will serve your `home` directory under `/fs` url.
 
 - Testing
 - Rethink status codes/responses
+- Caching headers
+- Resume
+- ...

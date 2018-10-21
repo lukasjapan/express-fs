@@ -1,23 +1,26 @@
 #!/bin/env node
 
-var express = require('express');
+var express = require("express");
 var app = express();
 
-var basepath = process.argv[2] || process.env['HOME'];
+var basepath = process.argv[2] || process.env["HOME"];
 var port = process.argv[3] || 8000;
 
-var exposefs = require('../index');
+var expressRestFs = require("../index");
 
-app.use(function(req, res, next){
-  console.log('%s %s', req.method, req.url);
+app.use(function(req, res, next) {
+  console.log("%s %s", req.method, req.url);
   next();
 });
 
-app.use('/', exposefs({
-	backend: 'filesystem',
-	basepath: basepath
-}));
+app.use(
+  "/",
+  expressRestFs({
+    backend: "filesystem",
+    basepath: basepath
+  })
+);
 
 app.listen(port, function() {
-	console.log("Exposing '" + basepath + "' at port", port);
+  console.log("Exposing '" + basepath + "' at port", port);
 });
