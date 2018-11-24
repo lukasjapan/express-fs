@@ -1,6 +1,11 @@
 ## ExpressRestFs
 
-Let's RESTify your filesystem
+Mount your filesystem on a url within an express application.
+
+## Features
+
+- Paths are translated directly into URLs
+- Browsers can open documents correctly (Content-type header)
 
 ## Usage
 
@@ -38,6 +43,7 @@ The code above will serve your `home` directory under `/fs` url.
 
 ## TODO:
 
+- Read-only mode (Maybe Permissions in general)
 - Testing
 - Rethink status codes/responses
 - Caching headers
